@@ -1,4 +1,4 @@
-<h1 align="center">Metrics Dashboard Design</h1>
+<h1 align="center">Analytics Dashboard Design</h1>
 
 <p align="center">
   A Claude Code skill that builds calm, honest product analytics dashboards.<br>
@@ -18,7 +18,7 @@
 
 ## Overview
 
-**Metrics Dashboard Design** gives your coding agent a tested blueprint for the page every indie developer and small
+**Analytics Dashboard Design** gives your coding agent a tested blueprint for the page every indie developer and small
 SaaS ends up building: *is it growing, where do people drop off, and who actually pays?*
 
 It covers the whole page — a Cloudflare-style frame with a sidebar and a sticky top bar, a hairline KPI row with
@@ -27,17 +27,17 @@ separates website events from app cohorts, buyer journeys with timelines, retent
 sources and an event log — plus the parts that usually go wrong: **numbers that disagree**, **revenue that lags**,
 **guesses shown as facts**, and **tracking that quietly becomes surveillance**.
 
-It was distilled from the analytics dashboard of [TypeCorrect](https://typecorrect.com/?utm_source=github&utm_campaign=metrics-dashboard-design-skill),
+It was distilled from the analytics dashboard of [TypeCorrect](https://typecorrect.com/?utm_source=github&utm_campaign=analytics-dashboard-design-skill),
 a shipped Mac app, and from every bug its owner caught on a screenshot. The
-[case study](skills/metrics-dashboard-design/references/case-study-typecorrect.md) lists them.
+[case study](skills/analytics-dashboard-design/references/case-study-typecorrect.md) lists them.
 
 ## Quick start
 
 In Claude Code:
 
 ```
-/plugin marketplace add boburjonmavlonov/metrics-dashboard-design-skill
-/plugin install metrics-dashboard-design@metrics-dashboard-design-skill
+/plugin marketplace add boburjonmavlonov/analytics-dashboard-design-skill
+/plugin install analytics-dashboard-design@analytics-dashboard-design-skill
 ```
 
 Then open your project and ask:
@@ -52,10 +52,10 @@ The skill also triggers on its own when you work on a stats page or ask why a da
 
 <table>
 <tr>
-<td width="360"><a href="https://typecorrect.com/?utm_source=github&utm_campaign=metrics-dashboard-design-skill"><img src="docs/sponsors/typecorrect-card.png" alt="TypeCorrect — fix text typed in the wrong keyboard layout on Mac" width="360"></a></td>
+<td width="360"><a href="https://typecorrect.com/?utm_source=github&utm_campaign=analytics-dashboard-design-skill"><img src="docs/sponsors/typecorrect-card.png" alt="TypeCorrect — fix text typed in the wrong keyboard layout on Mac" width="360"></a></td>
 <td>
 
-**[TypeCorrect](https://typecorrect.com/?utm_source=github&utm_campaign=metrics-dashboard-design-skill)** fixes text
+**[TypeCorrect](https://typecorrect.com/?utm_source=github&utm_campaign=analytics-dashboard-design-skill)** fixes text
 typed in the wrong keyboard layout on your Mac. Typed `ghbdtn` instead of `привет`? Double‑tap Shift and the word
 — or your selection — is fixed right where you typed it, and the layout switches. Turn on Smart switch and wrong
 words are fixed as you press Space. Native, private, any two layouts.
@@ -75,8 +75,8 @@ dependencies, fed by [`examples/sample-data.js`](examples/sample-data.js) — a 
 fictional Mac app. Open it in a browser:
 
 ```bash
-git clone https://github.com/boburjonmavlonov/metrics-dashboard-design-skill
-open metrics-dashboard-design-skill/examples/product-analytics.html
+git clone https://github.com/boburjonmavlonov/analytics-dashboard-design-skill
+open analytics-dashboard-design-skill/examples/product-analytics.html
 ```
 
 Every number is computed outside the page by [`examples/sample-data.mjs`](examples/sample-data.mjs) from one daily
@@ -122,21 +122,21 @@ options for docs and screenshots: `?days=90&theme=dark&metric=revenue&only=funne
 ### Claude Code plugin
 
 ```
-/plugin marketplace add boburjonmavlonov/metrics-dashboard-design-skill
-/plugin install metrics-dashboard-design@metrics-dashboard-design-skill
+/plugin marketplace add boburjonmavlonov/analytics-dashboard-design-skill
+/plugin install analytics-dashboard-design@analytics-dashboard-design-skill
 ```
 
 ### Plain skill
 
 ```bash
-git clone https://github.com/boburjonmavlonov/metrics-dashboard-design-skill
-cp -r metrics-dashboard-design-skill/skills/metrics-dashboard-design ~/.claude/skills/
+git clone https://github.com/boburjonmavlonov/analytics-dashboard-design-skill
+cp -r analytics-dashboard-design-skill/skills/analytics-dashboard-design ~/.claude/skills/
 ```
 
 ### Other agents
 
 Codex, Cursor and any agent that reads Markdown: point your `AGENTS.md` or rules file at
-`skills/metrics-dashboard-design/SKILL.md`. The references load from there.
+`skills/analytics-dashboard-design/SKILL.md`. The references load from there.
 
 ## Usage
 
@@ -150,7 +150,7 @@ Codex, Cursor and any agent that reads Markdown: point your `AGENTS.md` or rules
 ## What's inside
 
 ```
-skills/metrics-dashboard-design/
+skills/analytics-dashboard-design/
 ├── SKILL.md                    the six steps, rules that apply everywhere, house style, critique format
 └── references/
     ├── metrics.md              data contract, windows, uniques, deltas, revenue, funnels, attribution, shares, cohorts
@@ -186,7 +186,7 @@ tools/
 ## Re-taking the screenshots
 
 ```bash
-cd metrics-dashboard-design-skill
+cd analytics-dashboard-design-skill
 python3 -m http.server 4340 &
 sh tools/screenshots.sh
 ```

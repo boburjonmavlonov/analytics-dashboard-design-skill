@@ -1,9 +1,9 @@
 ---
-name: metrics-dashboard-design
+name: analytics-dashboard-design
 description: Build, redesign or critique a product analytics dashboard in a calm, Cloudflare-style layout — KPI row with deltas and sparklines, metric tabs over one chart, a sortable countries table, a website-to-app-to-paid funnel, buyer journeys, retention cohorts, app health, traffic sources and an event log — with honest numbers, privacy-first tracking and a screenshot QA pass. Use for a stats page, an indie app or SaaS analytics dashboard, a "how is my product doing" page, an admin metrics screen, or when asked why a dashboard's numbers don't add up.
 ---
 
-# Metrics dashboard design
+# Analytics dashboard design
 
 A dashboard for one product answers one question at first glance: **is it growing, and where are people
 dropping off?** Everything on the page exists to answer that, then to let the owner dig into why.

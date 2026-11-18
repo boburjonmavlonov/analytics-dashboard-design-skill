@@ -1,10 +1,10 @@
 {
-  "name": "metrics-dashboard-design-skill",
+  "name": "analytics-dashboard-design-skill",
   "owner": { "name": "Bobur Mavlonov", "url": "https://github.com/boburjonmavlonov" },
   "metadata": { "description": "A Claude Code skill for calm, honest product analytics dashboards." },
   "plugins": [
     {
-      "name": "metrics-dashboard-design",
+      "name": "analytics-dashboard-design",
       "source": "./",
       "description": "Cloudflare-style product analytics dashboards: KPI row, metric tabs, countries table, website-to-paid funnel, buyer journeys, retention, app health, honest numbers, privacy-first tracking and a screenshot QA pass.",
       "version": "1.0.0"
