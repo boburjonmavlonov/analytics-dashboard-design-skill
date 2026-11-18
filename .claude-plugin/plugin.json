@@ -1,0 +1,12 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "analytics-dashboard",
+  "version": "1.0.0",
+  "description": "Build, redesign or critique a product analytics dashboard in a calm, Cloudflare-style layout: KPI row with deltas and sparklines, metric tabs over one chart, a sortable countries table, a website-to-app-to-paid funnel, buyer journeys with timelines, retention cohorts, app health and traffic — with honest numbers, privacy-first tracking and a screenshot QA pass. Distilled from the analytics dashboard of a shipped Mac app.",
+  "author": { "name": "Bobur Mavlonov", "url": "https://github.com/boburjonmavlonov" },
+  "homepage": "https://github.com/boburjonmavlonov/analytics-dashboard-skill",
+  "repository": "https://github.com/boburjonmavlonov/analytics-dashboard-skill",
+  "license": "MIT",
+  "keywords": ["dashboard", "analytics", "product-analytics", "funnel", "retention", "kpi", "privacy", "cloudflare", "data-visualization", "skill"],
+  "skills": ["./skills/analytics-dashboard"]
+}

@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Product analytics — example</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #fafafa; --side: #ffffff; --card: #ffffff; --line: #e5e5e5; --grid: #f0f0f0; --hover: #f5f5f5;
+    --ink: #1f1f1f; --ink-2: #595959; --ink-3: #8c8c8c;
+    --brand: #f6821f; --link: #0051c3;
+    --series: #2a78d6; --series-wash: rgba(42, 120, 214, .12); --track: #edf3fb;
+    --cat-2: #eb6834; --cat-3: #1baf7a; --cat-4: #eda100; --cat-5: #e87ba4;
+    --good: #0ca30c; --good-wash: rgba(12, 163, 12, .10); --bad: #d03b3b; --bad-wash: rgba(208, 59, 59, .09); --warn: #c98500;
+    --seq-0: #f4f7fb; --seq-1: #cde2fb; --seq-2: #9ec5f4; --seq-3: #6da7ec; --seq-4: #3987e5; --seq-5: #256abf; --seq-6: #184f95; --heat-ink: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --bg: #121212; --side: #171717; --card: #1b1b1b; --line: #2e2e2e; --grid: #262626; --hover: #232323;
+      --ink: #ededed; --ink-2: #b0b0b0; --ink-3: #808080;
+      --link: #66a3ff;
+      --series: #3987e5; --series-wash: rgba(57, 135, 229, .16); --track: #1e2a3a;
+      --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500; --cat-5: #d55181;
+      --good: #3fbf6a; --good-wash: rgba(63, 191, 106, .12); --bad: #e66767; --bad-wash: rgba(230, 103, 103, .12); --warn: #e0a000;
+      --seq-0: #1f2329; --seq-1: #104281; --seq-2: #184f95; --seq-3: #1c5cab; --seq-4: #2a78d6; --seq-5: #5598e7; --seq-6: #86b6ef; --heat-ink: #0b0b0b;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #121212; --side: #171717; --card: #1b1b1b; --line: #2e2e2e; --grid: #262626; --hover: #232323;
+    --ink: #ededed; --ink-2: #b0b0b0; --ink-3: #808080;
+    --link: #66a3ff;
+    --series: #3987e5; --series-wash: rgba(57, 135, 229, .16); --track: #1e2a3a;
+    --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500; --cat-5: #d55181;
+    --good: #3fbf6a; --good-wash: rgba(63, 191, 106, .12); --bad: #e66767; --bad-wash: rgba(230, 103, 103, .12); --warn: #e0a000;
+    --seq-0: #1f2329; --seq-1: #104281; --seq-2: #184f95; --seq-3: #1c5cab; --seq-4: #2a78d6; --seq-5: #5598e7; --seq-6: #86b6ef; --heat-ink: #0b0b0b;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 13.5px/1.5 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; }
+  a { color: var(--link); text-decoration: none; }
+  .num, td.num, th.num { font-variant-numeric: tabular-nums; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .icon { width: 16px; height: 16px; flex: none; }
+
+  /* Layout: sidebar + main, like the Cloudflare dashboard */
+  .app { display: grid; grid-template-columns: 224px minmax(0, 1fr); min-height: 100vh; }
+  main { min-width: 0; }
+  .side { position: sticky; top: 0; height: 100vh; background: var(--side); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 14px 10px; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 18px; }
+  .brand-mark { width: 28px; height: 28px; border-radius: 7px; background: var(--brand); display: grid; place-items: center; color: #fff; flex: none; }
+  .brand-mark svg { width: 16px; height: 16px; }
+  .brand b { display: block; font-size: 14px; letter-spacing: -.01em; }
+  .brand small { display: block; color: var(--ink-3); font-size: 12px; margin-top: -2px; }
+  .nav { display: grid; gap: 1px; }
+  .nav a { position: relative; display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 6px; color: var(--ink-2); font-weight: 500; }
+  .nav a:hover { background: var(--hover); color: var(--ink); }
+  .nav a[aria-current="true"] { background: var(--hover); color: var(--ink); }
+  .nav a[aria-current="true"]::before { content: ""; position: absolute; left: -10px; top: 7px; bottom: 7px; width: 3px; border-radius: 0 3px 3px 0; background: var(--brand); }
+  .nav .icon { color: var(--ink-3); }
+  .nav a[aria-current="true"] .icon { color: var(--ink); }
+  .side-foot { margin-top: auto; padding: 10px; color: var(--ink-3); font-size: 12px; line-height: 1.45; }
+
+  .top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 28px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .crumbs { color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .crumbs b { color: var(--ink); font-weight: 600; }
+  .top .spacer { flex: 1; }
+  .status { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-3); font-size: 12.5px; white-space: nowrap; }
+  .status i { width: 7px; height: 7px; border-radius: 50%; background: var(--good); }
+  .status.error i { background: var(--bad); }
+  .icon-btn { display: inline-grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--ink-2); cursor: pointer; }
+  .icon-btn:hover { color: var(--ink); background: var(--hover); }
+  .text-btn { border: 0; background: none; padding: 0; color: var(--link); cursor: pointer; font-size: 12.5px; font-weight: 500; }
+  .text-btn:hover { text-decoration: underline; }
+
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; background: var(--card); padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: none; padding: 4px 10px; border-radius: 4px; color: var(--ink-2); cursor: pointer; font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+  .seg button:hover { color: var(--ink); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--card); }
+
+  .content { max-width: 1280px; padding: 24px 28px 64px; }
+  section { margin-bottom: 40px; }
+  .page-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 16px; }
+  h1 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; margin: 0; }
+  h2 { font-size: 16px; font-weight: 600; letter-spacing: -.01em; margin: 0; }
+  .section-head { margin-bottom: 12px; }
+  .section-head p, .page-head p { margin: 2px 0 0; color: var(--ink-3); font-size: 12.5px; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+  .card + .card { margin-top: 16px; }
+  .pad { padding: 16px 18px; }
+  .card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+  .card-head h3 { font-size: 13.5px; font-weight: 600; margin: 0; }
+  .card-head .meta { color: var(--ink-3); font-size: 12.5px; }
+  .grid { display: grid; gap: 16px; }
+  .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid > .card + .card { margin-top: 0; }
+
+  /* Metric row: cells divided by hairlines */
+  /* Each cell draws its own left and top hairline and is pulled 1px up-left, so the lines on the card's edges are
+     clipped away. A short last row leaves an empty card-coloured space, not a grey hole (no gap-colour trick). */
+  .metrics { display: grid; grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr)); overflow: hidden; }
+  .metric { background: var(--card); padding: 14px 16px 10px; min-width: 0; margin: -1px 0 0 -1px; box-shadow: inset 1px 0 0 var(--line), inset 0 1px 0 var(--line); }
+  .metric .label { color: var(--ink-2); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .metric .value { font-size: 24px; font-weight: 600; letter-spacing: -.02em; margin: 2px 0 4px; font-variant-numeric: tabular-nums; }
+  .metric .sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; color: var(--ink-3); font-size: 12px; min-height: 20px; }
+  .metric svg.spark { display: block; width: 100%; height: 28px; margin-top: 6px; }
+  .delta { display: inline-flex; align-items: center; gap: 2px; padding: 0 6px; border-radius: 4px; font-size: 11.5px; font-weight: 600; line-height: 18px; background: var(--grid); color: var(--ink-2); }
+  .delta.up { background: var(--good-wash); color: var(--good); }
+  .delta.down { background: var(--bad-wash); color: var(--bad); }
+
+  /* Underline tabs */
+  .tabs { display: flex; gap: 18px; overflow-x: auto; scrollbar-width: none; margin-bottom: -13px; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { border: 0; background: none; padding: 2px 0 11px; cursor: pointer; color: var(--ink-2); font-weight: 500; white-space: nowrap; border-bottom: 2px solid transparent; }
+  .tabs button:hover { color: var(--ink); }
+  .tabs button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--series); }
+
+  .chart-body { padding: 14px 18px 12px; }
+  .chart-context { color: var(--ink-3); font-size: 12px; margin: 0 0 6px; }
+  .chart { position: relative; }
+  .chart svg { display: block; width: 100%; height: 260px; overflow: visible; }
+  .chart .axis text { fill: var(--ink-3); font-size: 11px; }
+  .chart svg #hit:focus { outline: 2px solid var(--series); outline-offset: -2px; }
+  .tip { position: absolute; pointer-events: none; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 12px; color: var(--ink-2);
+         box-shadow: 0 6px 20px rgba(0, 0, 0, .10); white-space: nowrap; transform: translate(-50%, -110%); display: none; }
+  .tip b { display: block; font-size: 14px; color: var(--ink); }
+
+  /* Tables */
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  thead th { color: var(--ink-3); font-weight: 500; font-size: 12px; background: var(--card); border-bottom: 1px solid var(--line); }
+  tbody tr:hover td { background: var(--hover); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; }
+  td.muted { color: var(--ink-3); }
+
+  /* Countries */
+  .geo-summary { display: flex; flex-wrap: wrap; gap: 6px 22px; padding: 12px 18px; border-bottom: 1px solid var(--line); color: var(--ink-2); font-size: 12.5px; }
+  .geo-summary b { color: var(--ink); font-weight: 600; }
+  .geo th.sortable { padding: 0; }
+  .geo th.sortable button { width: 100%; display: flex; flex-direction: column; align-items: flex-end; gap: 0; border: 0; background: none; padding: 9px 14px; cursor: pointer; color: var(--ink-3); font-size: 12px; font-weight: 500; text-align: right; }
+  .geo th.sortable button small { font-size: 10.5px; color: var(--ink-3); opacity: .8; }
+  .geo th.sortable button:hover { color: var(--ink); }
+  .geo th[aria-sort="descending"] button { color: var(--ink); font-weight: 600; }
+  .geo th[aria-sort="descending"] button::after { content: "↓"; position: absolute; }
+  .geo th { position: relative; }
+  .geo th[aria-sort="descending"] button span::after { content: " ↓"; }
+  .geo th[aria-sort="descending"] button::after { content: none; }
+  .geo td.country, .geo th.country { position: sticky; left: 0; background: var(--card); z-index: 1; }
+  .geo tbody tr:hover td.country { background: var(--hover); }
+  .country-cell { display: flex; align-items: center; gap: 9px; min-width: 150px; }
+  .flag { font-size: 17px; line-height: 1; width: 20px; text-align: center; }
+  .flag.none { color: var(--ink-3); }
+  .geo td.sorted { background: color-mix(in srgb, var(--series) 4%, var(--card)); }
+  .geo tbody tr:hover td.sorted { background: var(--hover); }
+  .share { display: block; margin-top: 4px; height: 4px; border-radius: 2px; background: var(--track); min-width: 64px; }
+  .share i { display: block; height: 100%; border-radius: 2px; background: var(--series); }
+  .geo td small { color: var(--ink-3); font-size: 11.5px; margin-left: 4px; }
+  .geo tfoot td { font-weight: 600; border-top: 1px solid var(--line); border-bottom: 0; }
+  .geo tfoot td.country { background: var(--card); }
+
+  /* Funnel */
+  .funnel-group + .funnel-group { border-top: 1px solid var(--line); }
+  .funnel-group h4 { margin: 0; padding: 12px 18px 4px; font-size: 12px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; }
+  .step { display: grid; grid-template-columns: minmax(170px, 1.1fr) minmax(120px, 2fr) 74px 104px; align-items: center; gap: 16px; padding: 9px 18px; }
+  .step .name small { display: block; color: var(--ink-3); font-size: 11.5px; }
+  .step .bar { height: 22px; background: var(--track); border-radius: 4px; overflow: hidden; }
+  .step .bar i { display: block; height: 100%; background: var(--series); border-radius: 4px; min-width: 2px; }
+  .step .count { text-align: right; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .step .conv { text-align: right; color: var(--ink-2); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .step .conv small { display: block; color: var(--ink-3); font-size: 11px; }
+
+  /* Buyers */
+  .buyers-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+  .buyers tbody tr.row { cursor: pointer; }
+  .buyers tbody tr.row:focus-visible { outline: 2px solid var(--series); outline-offset: -2px; }
+  .buyers tbody tr.row td:first-child { padding-left: 34px; position: relative; }
+  .buyers tbody tr.row td:first-child::before { content: "›"; position: absolute; left: 14px; top: 50%; transform: translateY(-52%); color: var(--ink-3); font-size: 16px; transition: transform .15s; }
+  .buyers tbody tr.row[aria-expanded="true"] td:first-child::before { transform: translateY(-52%) rotate(90deg); }
+  .buyers tbody tr.row[aria-expanded="true"] td { border-bottom-color: transparent; }
+  .buyers tr.detail > td { background: var(--bg); padding: 4px 18px 16px 34px; white-space: normal; }
+  .buyers tr.detail:hover > td { background: var(--bg); }
+  .src small, .when small { display: block; color: var(--ink-3); font-size: 11.5px; }
+  .tag { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; line-height: 18px; background: var(--grid); color: var(--ink-2); }
+  .tag.after { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+  .tag.during { background: var(--series-wash); color: var(--series); }
+  .tag.good { background: var(--good-wash); color: var(--good); }
+  .tl { position: sticky; left: 34px; max-width: min(760px, calc(100vw - 84px)); }
+  .timeline { list-style: none; margin: 12px 0 0; padding: 0; max-width: 760px; }
+  .timeline li { position: relative; padding: 0 0 14px 24px; font-size: 13px; }
+  .timeline li::before { content: ""; position: absolute; left: 3px; top: 6px; width: 9px; height: 9px; border-radius: 50%; background: var(--card); box-shadow: inset 0 0 0 2px var(--series); }
+  .timeline li::after { content: ""; position: absolute; left: 7px; top: 17px; bottom: -1px; width: 1px; background: var(--line); }
+  .timeline li:last-child { padding-bottom: 0; }
+  .timeline li:last-child::after { display: none; }
+  .timeline li.key::before { background: var(--good); box-shadow: none; }
+  .timeline li.warn::before { box-shadow: inset 0 0 0 2px var(--warn); }
+  .timeline li.quiet::before { box-shadow: inset 0 0 0 2px var(--ink-3); }
+  .timeline b { font-weight: 600; }
+  .timeline time, .timeline .t { white-space: nowrap; color: var(--ink-3); font-size: 12px; margin-left: 6px; font-variant-numeric: tabular-nums; }
+  .timeline p { margin: 1px 0 0; color: var(--ink-2); font-size: 12.5px; }
+
+  /* Bar lists */
+  .bars { display: grid; gap: 12px; }
+  .bar-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; font-size: 13px; }
+  .bar-row .k { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .bar-row .v { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+  .bar-row .v small { color: var(--ink-3); font-weight: 400; }
+  .bar-row .track { grid-column: 1 / -1; height: 6px; background: var(--track); border-radius: 3px; position: relative; }
+  .bar-row .fill { position: absolute; inset: 0 auto 0 0; background: var(--series); border-radius: 3px; }
+  .empty { color: var(--ink-3); font-size: 13px; padding: 4px 0; }
+  .note { color: var(--ink-3); font-size: 12px; margin: 12px 0 0; }
+
+  /* Donut and histogram */
+  .donut-layout { display: grid; grid-template-columns: 112px 1fr; gap: 20px; align-items: center; min-height: 140px; }
+  .donut { width: 112px; height: 112px; border-radius: 50%; display: grid; place-items: center; }
+  .donut-hole { width: 80px; height: 80px; border-radius: 50%; background: var(--card); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .donut-hole strong { font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .donut-hole small { color: var(--ink-3); font-size: 11px; }
+  .legend { display: grid; gap: 9px; }
+  .legend-row { display: grid; grid-template-columns: 8px 1fr auto; gap: 8px; align-items: center; font-size: 12.5px; }
+  .swatch { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+  .legend-row b { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .legend-row small { display: block; font-size: 11px; color: var(--ink-3); }
+  .histogram { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; height: 170px; align-items: end; }
+  .hist-col { display: grid; grid-template-rows: 20px 118px 26px; text-align: center; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .hist-track { display: flex; align-items: end; justify-content: center; border-bottom: 1px solid var(--line); }
+  .hist-fill { width: 56%; border-radius: 4px 4px 0 0; background: var(--series); }
+  .hist-label { padding-top: 7px; color: var(--ink-2); }
+
+  /* Retention heatmap */
+  .heat td.cell { text-align: center; min-width: 54px; padding: 7px 6px; border: 2px solid var(--card); border-radius: 4px; font-variant-numeric: tabular-nums; font-size: 12px; }
+  .heat tbody tr:hover td { background: transparent; }
+  .heat tbody tr:hover td.cell { filter: brightness(.97); }
+  .heat-legend { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px 18px 14px; font-size: 11.5px; color: var(--ink-2); border-top: 1px solid var(--line); }
+  .heat-legend span { display: inline-flex; align-items: center; gap: 4px; }
+  .heat-key { display: inline-block; width: 18px; height: 10px; border-radius: 2px; }
+
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 1px 8px; border-radius: 4px; background: var(--grid); color: var(--ink-2); font-size: 11.5px; }
+  .pill .icon { width: 13px; height: 13px; }
+  html.only .side, html.only .top { display: none; }
+  html.only .app { grid-template-columns: minmax(0, 1fr); }
+  html.only .content { padding: 20px; }
+  html.only section { margin-bottom: 0; }
+  #error { display: none; margin-bottom: 16px; padding: 10px 14px; border: 1px solid var(--bad); border-radius: 8px; background: var(--bad-wash); color: var(--bad); }
+
+  @media (max-width: 1100px) {
+    .grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .metrics { --cols: 3 !important; }
+  }
+  @media (max-width: 900px) {
+    .buyers-grid { grid-template-columns: 1fr; }
+    .app { grid-template-columns: minmax(0, 1fr); }
+    .side { position: sticky; top: 0; z-index: 6; height: auto; flex-direction: row; align-items: center; gap: 6px; padding: 8px 12px; border-right: 0; border-bottom: 1px solid var(--line); }
+    .brand { padding: 0 6px 0 0; }
+    .brand small, .side-foot { display: none; }
+    .nav { display: flex; overflow-x: auto; scrollbar-width: none; }
+    .nav::-webkit-scrollbar { display: none; }
+    .nav a { white-space: nowrap; padding: 6px 10px; }
+    .nav a .icon { display: none; }
+    .nav a[aria-current="true"]::before { left: 10px; right: 10px; top: auto; bottom: -9px; width: auto; height: 2px; border-radius: 2px; }
+    .top { position: static; height: auto; flex-wrap: wrap; padding: 10px 16px; }
+    .crumbs { display: none; }
+    .content { padding: 18px 16px 48px; }
+    .grid.two { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .grid.three { grid-template-columns: 1fr; }
+    .metrics { --cols: 2 !important; }
+    .metric .value { font-size: 21px; }
+    .step { grid-template-columns: minmax(0, 1fr) 64px 92px; }
+    .step .bar { grid-column: 1 / -1; grid-row: 2; height: 10px; }
+    .status { display: none; }
+    .tabs { margin-bottom: 0; width: 100%; }
+    .tabs button { padding-bottom: 8px; }
+    .top { gap: 8px; }
+    .top .spacer { display: none; }
+    .seg { flex: 1; justify-content: space-between; }
+    .seg button { padding: 4px 8px; }
+  }
+</style>
+<script src="sample-data.js"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h8M9 5v14M14 13l3 3 5-7"/></svg></span>
+      <div><b>Lumen</b><small>Analytics</small></div>
+    </div>
+    <nav class="nav" id="nav" aria-label="Sections">
+      <a href="#overview" data-icon="chart">Overview</a>
+      <a href="#geo" data-icon="globe">Countries</a>
+      <a href="#funnel" data-icon="funnel">Funnel</a>
+      <a href="#buyers" data-icon="key">Buyers</a>
+      <a href="#app" data-icon="monitor">App</a>
+      <a href="#retention" data-icon="repeat">Retention</a>
+      <a href="#web" data-icon="link">Website</a>
+      <a href="#events" data-icon="list">Events</a>
+    </nav>
+    <p class="side-foot">Sample data for a fictional app. Visitors are counted without cookies; IP addresses are never stored.</p>
+  </aside>
+
+  <main>
+    <header class="top">
+      <div class="crumbs">lumen.example / <b>Analytics</b></div>
+      <div class="spacer"></div>
+      <span class="status" id="status"><i></i><span id="updated">Loading…</span></span>
+      <div class="seg" id="period" role="group" aria-label="Period">
+        <button data-days="7">7 days</button>
+        <button data-days="30">30 days</button>
+        <button data-days="90">90 days</button>
+        <button data-days="365">1 year</button>
+      </div>
+      <button class="icon-btn" id="theme" type="button"></button>
+    </header>
+
+    <div class="content">
+      <div id="error" role="alert"></div>
+
+      <section id="overview">
+        <div class="page-head"><h1>Overview</h1><p id="range"></p></div>
+        <div class="card metrics" id="kpis" style="--cols:6"></div>
+        <div class="card">
+          <div class="card-head">
+            <div class="tabs" id="metric" role="group" aria-label="Metric"></div>
+            <div class="meta"><span id="metric-total"></span> · <button class="text-btn" id="toggle-table" type="button">Table</button></div>
+          </div>
+          <div class="chart-body">
+            <p class="chart-context" id="chart-context"></p>
+            <div class="chart" id="main-chart"><svg role="group" aria-label="Metric chart"></svg><div class="tip"></div></div>
+            <div class="scroll" id="main-table" hidden></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="geo">
+        <div class="section-head"><h2>Countries</h2><p>Every step of the journey, by country. Click a column to sort by it.</p></div>
+        <div class="card">
+          <div class="geo-summary" id="geo-summary"></div>
+          <div class="scroll"><table class="geo" id="geo-table"></table></div>
+        </div>
+        <p class="note">Visits, downloads, installs, trials and licenses count the selected period; “Active today” is today and “Active 30d” the last 30 days (UTC). Each Mac counts once per window, in the country of its latest event. Country comes from the network connection, so VPNs can move people.</p>
+      </section>
+
+      <section id="funnel">
+        <div class="section-head"><h2>Funnel</h2><p>Website: visits in the period. App: Macs installed in the period, and how far they have got since.</p></div>
+        <div class="card" id="funnel-card"></div>
+      </section>
+
+      <section id="buyers">
+        <div class="section-head"><h2>Buyer journeys</h2><p>Every Mac that bought a license in the period: where it came from, how it used the trial and when it paid. Click a row for the full path.</p></div>
+        <div class="card metrics" id="buyer-kpis" style="--cols:5"></div>
+        <div class="grid buyers-grid" style="margin-top:16px">
+          <div class="card"><div class="card-head"><h3>Where buyers came from</h3><span class="meta">buyers</span></div><div class="pad bars" id="buyer-sources"></div></div>
+          <div class="card"><div class="card-head"><h3>When they bought</h3></div><div class="pad" id="buyer-timing"></div></div>
+        </div>
+        <div class="card" style="margin-top:16px"><div class="scroll"><table class="buyers" id="buyers-table"></table></div></div>
+        <p class="note">The website and the app share no identifier. An install is linked to a download from the same network in the 2 days before it (a daily salted hash of the IP; the IP itself is never stored). When only country and time match, a single candidate is marked “approx.”; several candidates leave the source unknown. Source is the first referrer or utm of that day. The table lists the newest 50 buyers; the tiles count all of them.</p>
+      </section>
+
+      <section id="app">
+        <div class="section-head"><h2>App users</h2><p>Activity and license status of Macs active in the last 30 days.</p></div>
+        <div class="card metrics" id="app-kpis" style="--cols:4"></div>
+        <div class="grid three" style="margin-top:16px">
+          <div class="card"><div class="card-head"><h3>License status</h3></div><div class="pad" id="app-access"></div></div>
+          <div class="card"><div class="card-head"><h3>Trial days left</h3><span class="meta">of 7</span></div><div class="pad" id="app-trial"></div></div>
+          <div class="card"><div class="card-head"><h3>Permissions</h3><span class="meta">Accessibility + Input Monitoring</span></div><div class="pad" id="app-perms"></div></div>
+          <div class="card"><div class="card-head"><h3>App versions</h3></div><div class="pad bars" id="app-versions"></div></div>
+          <div class="card"><div class="card-head"><h3>macOS versions</h3></div><div class="pad bars" id="app-macos"></div></div>
+        </div>
+      </section>
+
+      <section id="retention">
+        <div class="section-head"><h2>Retention</h2><p>Share of each weekly install cohort that used the app in week N.</p></div>
+        <div class="card"><div class="scroll" id="retention-table"></div></div>
+      </section>
+
+      <section id="web">
+        <div class="section-head"><h2>Website</h2><p>lumen.example — daily unique visitors.</p></div>
+        <div class="grid three">
+          <div class="card"><div class="card-head"><h3>Referrers</h3><span class="meta">referrer</span></div><div class="pad bars" id="web-referrers"></div></div>
+          <div class="card"><div class="card-head"><h3>Campaigns</h3><span class="meta">utm_source</span></div><div class="pad bars" id="web-sources"></div></div>
+          <div class="card"><div class="card-head"><h3>Pages</h3><span class="meta">views</span></div><div class="pad bars" id="web-pages"></div></div>
+          <div class="card"><div class="card-head"><h3>Countries</h3></div><div class="pad bars" id="web-countries"></div></div>
+          <div class="card"><div class="card-head"><h3>Language</h3></div><div class="pad bars" id="web-languages"></div></div>
+          <div class="card"><div class="card-head"><h3>Device</h3></div><div class="pad" id="web-devices"></div></div>
+        </div>
+      </section>
+
+      <section id="events">
+        <div class="section-head"><h2>Recent events</h2><p>The latest 25 events.</p></div>
+        <div class="card"><div class="scroll" id="recent"></div></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const nf = new Intl.NumberFormat("en-US");
+  const ICONS = {
+    chart: '<path d="M4 20V10m6 10V4m6 16v-7m4 7H3"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/>',
+    funnel: '<path d="M3 4h18l-7 8v7l-4 2v-9z"/>',
+    monitor: '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M12 17v4m-4 0h8"/>',
+    repeat: '<path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+    link: '<path d="m10 14 4-4m-6 5-2 2a4 4 0 0 1-5-5l4-4a4 4 0 0 1 6 0m2 1 2-2a4 4 0 0 1 5 5l-4 4a4 4 0 0 1-6 0"/>',
+    list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+    phone: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+    auto: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18a9 9 0 0 0 0-18z" fill="currentColor"/>',
+    logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9"/>',
+    key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9m-3 3 3 3m-6 0 2 2"/>',
+  };
+  const icon = (name) => `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ICONS.chart}</svg>`;
+  document.querySelectorAll("#nav a").forEach((a) => a.insertAdjacentHTML("afterbegin", icon(a.dataset.icon)));
+
+  const validCountry = (code) => /^[A-Z]{2}$/.test(String(code).toUpperCase()) && !["XX", "T1"].includes(String(code).toUpperCase());
+  const flag = (code) => validCountry(code)
+    ? `<span class="flag" aria-hidden="true">${String.fromCodePoint(...String(code).toUpperCase().split("").map((c) => c.charCodeAt(0) + 127397))}</span>`
+    : `<span class="flag none" aria-hidden="true">${icon("globe")}</span>`;
+  const fmt = (n) => {
+    n = Number(n) || 0;
+    if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
+    if (Math.abs(n) >= 1e4) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
+    return nf.format(Math.round(n * 10) / 10);
+  };
+  const money = (cents) => "$" + nf.format(Math.round((Number(cents) || 0) / 100));
+  const pct = (a, b) => (b ? (100 * a / b) : 0);
+  const plural = (n, one, many = one + "s") => `${nf.format(n)} ${n === 1 ? one : many}`;
+  const pctText = (v) => (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10) + "%";
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const shortDay = (d) => { const [, m, day] = d.split("-"); return `${MONTHS[Number(m) - 1]} ${Number(day)}`; };
+
+  // Theme: auto → light → dark (remembered per browser).
+  const themes = ["auto", "light", "dark"];
+  const themeLabel = { auto: "Theme: auto", light: "Theme: light", dark: "Theme: dark" };
+  const themeIcon = { auto: "auto", light: "sun", dark: "moon" };
+  let theme = "auto";
+  try { theme = localStorage.getItem("example-theme") || "auto"; } catch {}
+  const applyTheme = () => {
+    if (theme === "auto") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", theme);
+    $("#theme").innerHTML = icon(themeIcon[theme]) + `<span class="sr-only">${themeLabel[theme]}</span>`;
+    $("#theme").title = themeLabel[theme];
+  };
+  $("#theme").addEventListener("click", () => {
+    theme = themes[(themes.indexOf(theme) + 1) % themes.length];
+    try { localStorage.setItem("example-theme", theme); } catch {}
+    applyTheme();
+  });
+  applyTheme();
+
+  // Highlight the section in view.
+  const links = [...document.querySelectorAll("#nav a")];
+  const setCurrent = (id) => links.forEach((a) => a.setAttribute("aria-current", String(a.getAttribute("href") === `#${id}`)));
+  setCurrent("overview");
+  const sections = [...document.querySelectorAll("main section[id]")];
+  let spyFrame = 0;
+  const spy = () => {
+    spyFrame = 0;
+    const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+    const current = atBottom ? sections.at(-1) : sections.filter((s) => s.getBoundingClientRect().top <= 96).at(-1) || sections[0];
+    setCurrent(current.id);
+  };
+  window.addEventListener("scroll", () => { spyFrame ||= requestAnimationFrame(spy); }, { passive: true });
+
+  let days = 30;
+  try { days = Number(localStorage.getItem("example-days")) || 30; } catch {}
+  let metric = "visitors";
+  let geoSort = "downloads";
+  let data = null;
+
+  const METRICS = [
+    { key: "visitors", label: "Visitors", kind: "area", note: "Website visitors" },
+    { key: "downloads", label: "Downloads", kind: "bar", note: "DMG downloads" },
+    { key: "installs", label: "Installs", kind: "bar", note: "New installs" },
+    { key: "trial_starts", label: "Trials", kind: "bar", note: "Trials started" },
+    { key: "activations", label: "Licenses", kind: "bar", note: "Licenses activated" },
+    { key: "dau", label: "Active Macs", kind: "line", note: "Daily active Macs" },
+    { key: "conversions", label: "Actions", kind: "bar", note: "Successful in-app actions" },
+    { key: "revenue", label: "Revenue", kind: "bar", note: "Net revenue from the payment provider", money: true },
+  ];
+
+  $("#period").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-days]");
+    if (!b) return;
+    days = Number(b.dataset.days);
+    try { localStorage.setItem("example-days", String(days)); } catch {}
+    load();
+  });
+  $("#toggle-table").addEventListener("click", () => {
+    const t = $("#main-table");
+    t.hidden = !t.hidden;
+    $("#main-chart").hidden = !t.hidden;
+    $("#toggle-table").textContent = t.hidden ? "Table" : "Chart";
+    if (t.hidden && data) renderMain();
+  });
+
+  async function load() {
+    document.querySelectorAll("#period button").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.days) === days)));
+    try {
+      // In a real app this is `await fetch(\`/api/stats?days=${days}\`)`; the example reads fixed sample data.
+      data = window.SAMPLE?.[days];
+      if (!data) throw new Error("sample-data.js is missing; run node examples/sample-data.mjs");
+      $("#error").style.display = "none";
+      $("#status").classList.remove("error");
+      render();
+    } catch (err) {
+      $("#error").textContent = "Couldn’t load the data: " + err.message;
+      $("#error").style.display = "block";
+      $("#status").classList.add("error");
+      $("#updated").textContent = "Error";
+    }
+  }
+
+  // Change vs the previous period. Tiny bases stay grey; `upIsBad` flips the colour (errors, refunds), not the arrow.
+  function delta(cur, prev, { upIsBad = false, small = 5 } = {}) {
+    if (!prev && !cur) return { text: "0%", cls: "", title: "Also 0 in the previous period" };
+    if (!prev) return { text: "new", cls: "", title: "Was 0 in the previous period" };
+    const d = 100 * (cur - prev) / prev;
+    const arrow = d > 0 ? "▲" : d < 0 ? "▼" : "";
+    const quiet = Math.max(cur, prev) < small;
+    const good = upIsBad ? d < 0 : d > 0;
+    const cls = quiet || !d ? "" : good ? "up" : "down";
+    return { text: `${arrow} ${pctText(Math.abs(d))}`.trim(), cls, title: quiet ? "Small numbers: compared with the previous period" : "Compared with the previous period" };
+  }
+
+  function spark(values) {
+    const w = 160, h = 28, max = Math.max(1, ...values);
+    if (values.length < 2) return "";
+    const y = (v) => h - 2 - (v / max) * (h - 5);
+    const pts = values.map((v, i) => `${((i / (values.length - 1)) * w).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+    return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><polygon points="0,${h} ${pts} ${w},${h}" fill="var(--series-wash)"/><polyline points="${pts}" fill="none" stroke="var(--series)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  }
+
+  function metricCell({ label, value, cur, prev, series, hint, prevText }) {
+    const d = prev === undefined ? null : delta(cur, prev);
+    const sub = d ? `<span class="delta ${d.cls}" title="${esc(d.title)}">${esc(d.text)}</span><span>was ${esc(prevText ?? fmt(prev))}</span>` : hint ? `<span>${esc(hint)}</span>` : "";
+    return `<div class="metric"><div class="label" title="${esc(label)}">${esc(label)}</div><div class="value">${value}</div><div class="sub">${sub}</div>${series ? spark(series) : ""}</div>`;
+  }
+
+  function render() {
+    const { current: c, previous: p, series, totals, period } = data;
+    const synced = totals.payments_synced_at ? new Date(Number(totals.payments_synced_at)) : null;
+    const range = days > 90 ? `${shortDay(period.start)} ${period.start.slice(0, 4)} – ${shortDay(period.end)} ${period.end.slice(0, 4)}` : `${shortDay(period.start)} – ${shortDay(period.end)}`;
+    $("#range").textContent = `${range} (UTC) · vs the previous ${days} days` +
+      (totals.first_day ? ` · data since ${shortDay(totals.first_day)} ${totals.first_day.slice(0, 4)}` : " · no events yet") +
+      (synced ? ` · payments synced ${synced.toLocaleString("en-US", { timeZone: "UTC", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} UTC` : " · payments not connected");
+    $("#updated").textContent = `Updated ${new Date(data.generated_at).toLocaleTimeString("en-US", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" })} UTC`;
+    const col = (k) => chartBuckets(series, k, days).rows.map((r) => r.value);
+
+    $("#kpis").innerHTML = [
+      metricCell({ label: "Visitors", value: fmt(c.visitors), cur: c.visitors, prev: p.visitors, series: col("visitors") }),
+      metricCell({ label: "Downloads", value: fmt(c.downloads), cur: c.downloads, prev: p.downloads, series: col("downloads") }),
+      metricCell({ label: "New installs", value: fmt(c.installs), cur: c.installs, prev: p.installs, series: col("installs") }),
+      metricCell({ label: "Trials started", value: fmt(c.trial_starts), cur: c.trial_starts, prev: p.trial_starts, series: col("trial_starts") }),
+      metricCell({ label: "Licenses activated", value: fmt(c.activations), cur: c.activations, prev: p.activations, series: col("activations") }),
+      metricCell({ label: "Revenue", value: money(c.revenue), cur: c.revenue, prev: p.revenue, prevText: money(p.revenue), series: col("revenue") }),
+    ].join("");
+
+    const dauToday = totals.dau_today || 0, wau = totals.wau || 0, mau = totals.mau || 0;
+    const attempts = c.conversions + c.failed;
+    const access = Object.fromEntries((data.app.access || []).map((r) => [r.key, r.n]));
+    $("#app-kpis").innerHTML = [
+      metricCell({ label: "Active today (DAU)", value: fmt(dauToday), hint: `avg ${fmt(c.avg_dau)} / day in period` }),
+      metricCell({ label: "Weekly active (WAU)", value: fmt(wau), hint: "last 7 days" }),
+      metricCell({ label: "Monthly active (MAU)", value: fmt(mau), hint: "last 30 days" }),
+      metricCell({ label: "Stickiness", value: mau ? pctText(pct(c.avg_dau, mau)) : "—", hint: "avg DAU ÷ MAU" }),
+      metricCell({ label: "Actions", value: fmt(c.conversions), cur: c.conversions, prev: p.conversions }),
+      metricCell({ label: "Success rate", value: attempts ? pctText(pct(c.conversions, attempts)) : "—", hint: `${fmt(c.failed)} failed` }),
+      metricCell({ label: "Paying users", value: fmt(access.licensed || 0), hint: `${fmt(access.trial || 0)} in trial · ${fmt(access.ended || 0)} trial ended` }),
+      metricCell({ label: "Install to purchase", value: data.activation_days === null ? "—" : `${Math.round(data.activation_days * 10) / 10} days`, hint: `median · ${fmt(totals.customers || 0)} customers all time, ${money(totals.revenue)}` }),
+    ].join("");
+
+    renderMetricTabs();
+    renderMain();
+    renderCountries();
+    renderFunnel();
+    renderBuyers();
+    donut("#app-access", data.app.access, { population: data.app.active_30d, labels: { licensed: "Licensed", trial: "In trial", ended: "Trial ended" }, colors: { licensed: "var(--good)", trial: "var(--series)", ended: "var(--bad)" } });
+    trialHistogram(data.app.trial_usage);
+    donut("#app-perms", data.app.permissions, { population: data.app.active_30d, labels: { granted: "Granted", missing: "Missing" }, colors: { granted: "var(--good)", missing: "var(--bad)" } });
+    bars("#app-versions", data.app.versions);
+    bars("#app-macos", data.app.macos, { prefix: "macOS " });
+    renderRetention();
+    const w = data.web;
+    bars("#web-referrers", w.referrers, { value: "visitors", empty: "Direct, or no referrer" });
+    bars("#web-sources", w.sources, { value: "visitors", empty: "No visits with utm_source" });
+    bars("#web-pages", w.pages, { value: "views" });
+    bars("#web-countries", w.countries, { value: "visitors", country: true });
+    bars("#web-languages", w.languages, { value: "visitors", labels: { en: "English", de: "Deutsch", ru: "Русский", uz: "O‘zbekcha", fr: "Français", pl: "Polski", tr: "Türkçe" } });
+    donut("#web-devices", w.devices, { value: "visitors", unit: "visits", devices: true, labels: { mac: "Mac", windows: "Windows", mobile: "Phone", tablet: "Tablet", linux: "Linux", other: "Other" } });
+    renderRecent();
+  }
+
+  const regionNames = (() => { try { return new Intl.DisplayNames(["en"], { type: "region" }); } catch { return null; } })();
+  const countryName = (code) => { if (!code || ["unknown", "XX", "T1"].includes(code)) return "Unknown"; try { return regionNames?.of(code) || code; } catch { return code; } };
+
+  // One row per country across the whole journey; each column keeps its own counting window.
+  const GEO = [
+    { key: "visitors", label: "Visits", window: "period" },
+    { key: "downloads", label: "Downloads", window: "period" },
+    { key: "installs", label: "Installs", window: "period" },
+    { key: "trial_starts", label: "Trials", window: "period" },
+    { key: "activations", label: "Licenses", window: "period" },
+    { key: "dau", label: "Active today", window: "today" },
+    { key: "mau", label: "Active 30d", window: "30 days" },
+  ];
+
+  function renderCountries() {
+    const columns = GEO.filter((g) => data.countries?.[g.key]);
+    if (!columns.some((g) => g.key === geoSort)) geoSort = columns[0]?.key;
+    const rows = new Map();
+    const totals = {};
+    for (const g of columns) {
+      totals[g.key] = 0;
+      for (const r of data.countries[g.key]) {
+        const key = validCountry(r.key) ? String(r.key).toUpperCase() : "unknown";
+        if (!rows.has(key)) rows.set(key, { key });
+        rows.get(key)[g.key] = (rows.get(key)[g.key] || 0) + (Number(r.n) || 0);
+        totals[g.key] += Number(r.n) || 0;
+      }
+    }
+    const list = [...rows.values()].sort((a, b) =>
+      (a.key === "unknown") - (b.key === "unknown") || (b[geoSort] || 0) - (a[geoSort] || 0) ||
+      columns.reduce((s, g) => s + (b[g.key] || 0) - (a[g.key] || 0), 0) || a.key.localeCompare(b.key));
+    const sortCol = columns.find((g) => g.key === geoSort);
+    const known = list.filter((r) => r.key !== "unknown" && r[geoSort]);
+    const top = known[0];
+    $("#geo-summary").innerHTML = `<span>Sorted by: <b>${esc(sortCol?.label || "")}</b></span>` +
+      `<span>Countries: <b>${nf.format(known.length)}</b></span>` +
+      (top ? `<span>Top: <b>${flag(top.key)} ${esc(countryName(top.key))}</b> · ${pctText(pct(top[geoSort], totals[geoSort]))}</span>` : `<span>No data in this column yet</span>`);
+    if (!list.length) { $("#geo-table").innerHTML = `<tbody><tr><td class="muted">No data yet</td></tr></tbody>`; return; }
+    const head = `<thead><tr><th class="country" scope="col">Country</th>${columns.map((g) =>
+      `<th class="num sortable" scope="col" aria-sort="${g.key === geoSort ? "descending" : "none"}"><button type="button" data-geo="${g.key}"><span>${esc(g.label)}</span><small>${esc(g.window)}</small></button></th>`).join("")}</tr></thead>`;
+    const cell = (r, g) => {
+      const v = r[g.key] || 0;
+      if (g.key !== geoSort) return `<td class="num${v ? "" : " muted"}">${v ? nf.format(v) : "—"}</td>`;
+      const share = pct(v, totals[g.key]);
+      return `<td class="num sorted" title="${esc(countryName(r.key))}: ${nf.format(v)} (${pctText(share)})">${v ? `${nf.format(v)}<small>${pctText(share)}</small>` : '<span class="muted">—</span>'}<span class="share"><i style="width:${share.toFixed(1)}%"></i></span></td>`;
+    };
+    const body = `<tbody>${list.map((r) => `<tr><td class="country"><span class="country-cell">${flag(r.key)}<span>${esc(countryName(r.key))}</span></span></td>${columns.map((g) => cell(r, g)).join("")}</tr>`).join("")}</tbody>`;
+    const foot = `<tfoot><tr><td class="country">Total</td>${columns.map((g) => `<td class="num${g.key === geoSort ? " sorted" : ""}">${nf.format(totals[g.key])}</td>`).join("")}</tr></tfoot>`;
+    $("#geo-table").innerHTML = head + body + foot;
+    $("#geo-table").onclick = (e) => {
+      const b = e.target.closest("button[data-geo]");
+      if (!b) return;
+      geoSort = b.dataset.geo;
+      renderCountries();
+      $(`#geo-table button[data-geo="${geoSort}"]`)?.focus();
+    };
+  }
+
+  function donut(sel, input, opts = {}) {
+    const value = (r) => Math.max(0, Number(r[opts.value || "n"]) || 0);
+    const rows = (input || []).map((r) => ({ key: r.key, n: value(r) })).filter((r) => r.n > 0);
+    const known = rows.reduce((sum, r) => sum + r.n, 0);
+    if (opts.population > known) rows.push({ key: "unknown", n: opts.population - known });
+    const total = rows.reduce((sum, r) => sum + r.n, 0);
+    if (!total) { $(sel).innerHTML = '<div class="empty">No data yet</div>'; return; }
+    const palette = ["var(--series)", "var(--cat-2)", "var(--cat-3)", "var(--cat-4)", "var(--cat-5)"];
+    let offset = 0;
+    const segments = rows.map((r, i) => {
+      const color = r.key === "unknown" ? "var(--ink-3)" : opts.colors?.[r.key] || (i < palette.length ? palette[i] : "var(--ink-3)");
+      const start = offset; offset += 100 * r.n / total;
+      return { ...r, color, start, end: offset, label: r.key === "unknown" ? "Not reported" : opts.labels?.[r.key] || r.key };
+    });
+    // A 1.2% surface-coloured gap separates neighbouring segments.
+    const gap = segments.length > 1 ? 0.6 : 0;
+    const stops = segments.map((r) => `var(--card) ${r.start}% ${r.start + gap}%, ${r.color} ${r.start + gap}% ${Math.max(r.start + gap, r.end - gap)}%, var(--card) ${Math.max(r.start + gap, r.end - gap)}% ${r.end}%`);
+    $(sel).innerHTML = `<div class="donut-layout"><div class="donut" aria-hidden="true" style="background:conic-gradient(${gap ? stops.join(",") : segments.map((r) => `${r.color} ${r.start}% ${r.end}%`).join(",")})"><div class="donut-hole"><strong>${fmt(total)}</strong><small>${esc(opts.unit || "Macs")}</small></div></div><div class="legend">${segments.map((r) => `<div class="legend-row"><span class="swatch" style="background:${r.color}"></span><span>${opts.devices ? icon(["mobile", "tablet"].includes(r.key) ? "phone" : "monitor") + " " : ""}${esc(r.label)}<small>${pctText(pct(r.n, total))}</small></span><b>${nf.format(r.n)}</b></div>`).join("")}</div></div><p class="note">${opts.population ? "Share of Macs active in the last 30 days" : "Share within the groups shown"}</p>`;
+  }
+
+  function trialHistogram(input) {
+    if (!input?.length) { $("#app-trial").innerHTML = '<div class="empty">No trial data yet</div>'; return; }
+    const counts = Object.fromEntries(input.map((r) => [r.key, Number(r.n) || 0]));
+    const groups = [["5–7", "5–7 days", "var(--series)"], ["3–4", "3–4 days", "var(--series)"], ["1–2", "1–2 days", "var(--warn)"], ["ended", "Ended", "var(--bad)"]];
+    const max = Math.max(1, ...Object.values(counts));
+    $("#app-trial").innerHTML = `<div class="histogram">${groups.map(([key, label, color]) => `<div class="hist-col" title="${label}: ${counts[key] || 0} Mac"><b>${nf.format(counts[key] || 0)}</b><div class="hist-track"><div class="hist-fill" style="height:${100 * (counts[key] || 0) / max}%;background:${color}"></div></div><span class="hist-label">${label}</span></div>`).join("")}</div><p class="note">Macs in trial, by days left.</p>`;
+  }
+
+  function bars(sel, rows, opts = {}) {
+    const el = $(sel);
+    rows = [...(rows || [])].sort((a, b) => (Number(b[opts.value || "n"]) || 0) - (Number(a[opts.value || "n"]) || 0));
+    if (!rows.length) { el.innerHTML = `<div class="empty">${esc(opts.empty || "No data yet")}</div>`; return; }
+    const val = (r) => Number(r[opts.value || "n"]) || 0;
+    const max = Math.max(...rows.map(val), 1);
+    const total = rows.reduce((sum, r) => sum + val(r), 0);
+    el.innerHTML = rows.map((r) => {
+      let label = opts.labels?.[r.key] ?? r.key;
+      if (opts.country) label = countryName(r.key);
+      label = (opts.prefix || "") + label;
+      return `<div class="bar-row" title="${esc(label)}: ${nf.format(val(r))}">
+        <span class="k">${opts.country ? flag(r.key) : ""}<span class="bar-label">${esc(label)}</span></span>
+        <span class="v">${nf.format(val(r))} <small>${pctText(pct(val(r), total))}</small></span>
+        <span class="track"><span class="fill" style="width:${(100 * val(r) / max).toFixed(1)}%"></span></span></div>`;
+    }).join("");
+  }
+
+  function renderMetricTabs() {
+    $("#metric").innerHTML = METRICS.map((m) => `<button type="button" data-metric="${m.key}" aria-pressed="${m.key === metric}">${esc(m.label)}</button>`).join("");
+    $("#metric").onclick = (e) => {
+      const b = e.target.closest("button[data-metric]");
+      if (!b) return;
+      metric = b.dataset.metric;
+      renderMetricTabs();
+      renderMain();
+    };
+  }
+
+  // Long ranges are grouped so each mark stays readable. DAU is an average; event counts are sums.
+  function chartBuckets(rows, key, periodDays) {
+    const granularity = periodDays <= 30 ? "day" : periodDays <= 90 ? "week" : "month";
+    const groups = [];
+    rows.forEach((r, i) => {
+      const id = granularity === "day" ? r.day : granularity === "week" ? Math.floor(i / 7) : r.day.slice(0, 7);
+      if (groups.at(-1)?.id !== id) groups.push({ id, start: r.day, end: r.day, sum: 0, count: 0 });
+      const group = groups.at(-1);
+      group.end = r.day;
+      group.sum += Number(r[key]) || 0;
+      group.count++;
+    });
+    return { granularity, rows: groups.map((g) => ({ ...g, value: key === "dau" ? g.sum / g.count : g.sum,
+      label: granularity === "day" ? shortDay(g.start) : `${shortDay(g.start)}–${shortDay(g.end)}` })) };
+  }
+
+  function renderMain() {
+    const m = METRICS.find((x) => x.key === metric);
+    const daily = data.series;
+    const { granularity, rows } = chartBuckets(daily, metric, days);
+    const values = rows.map((r) => r.value);
+    const total = daily.reduce((sum, r) => sum + (Number(r[metric]) || 0), 0);
+    const currency = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n / 100);
+    const display = (n) => m.money ? currency(n) : fmt(n);
+    $("#metric-total").textContent = metric === "dau" ? `avg ${fmt(total / daily.length)} / day` : `total ${display(total)}`;
+    const unit = granularity === "day" ? "daily" : granularity === "week" ? "weekly" : "monthly";
+    $("#chart-context").textContent = `${m.note} · ${unit} ${metric === "dau" ? "average" : "total"}${["visitors", "downloads"].includes(metric) && granularity !== "day" ? " (sum of daily uniques)" : ""}`;
+
+    // The table always keeps the original daily values.
+    $("#main-table").innerHTML = `<table><thead><tr><th>Day</th>${METRICS.map((x) => `<th class="num">${esc(x.label)}</th>`).join("")}</tr></thead><tbody>` +
+      daily.slice().reverse().map((r) => `<tr><td>${esc(r.day)}</td>${METRICS.map((x) => `<td class="num">${x.money ? currency(r[x.key] || 0) : nf.format(r[x.key] || 0)}</td>`).join("")}</tr>`).join("") +
+      "</tbody></table>";
+
+    const svg = $("#main-chart svg");
+    const W = Math.max(300, svg.getBoundingClientRect().width || 800), H = 260;
+    const padL = 48, padR = 8, padT = 12, padB = 28;
+    const plotW = W - padL - padR;
+    const raw = Math.max(1, ...values);
+    const step = niceStep(raw / 4);
+    const max = Math.ceil(raw / step) * step;
+    const isBar = m.kind === "bar";
+    const x = (i) => padL + (isBar ? (i + .5) / values.length : values.length === 1 ? .5 : i / (values.length - 1)) * plotW;
+    const y = (v) => padT + (1 - v / max) * (H - padT - padB);
+    let grid = "";
+    for (let v = 0; v <= max + 1e-9; v += step) {
+      grid += `<line x1="${padL}" x2="${W - padR}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1"${v ? ' stroke-dasharray="3 3"' : ""}/>` +
+        `<text x="${padL - 10}" y="${y(v) + 4}" text-anchor="end">${m.money ? (max < 100 ? currency(v) : money(v)) : fmt(v)}</text>`;
+    }
+    const tickEvery = Math.ceil(values.length / Math.max(2, Math.floor(plotW / 76)));
+    let ticks = "", lastTickX = -Infinity;
+    rows.forEach((r, i) => {
+      if ((i % tickEvery === 0 || i === rows.length - 1 && values.length < 20) && x(i) - lastTickX >= 65) {
+        const label = granularity === "month" ? `${MONTHS[Number(r.start.slice(5, 7)) - 1]} ${r.start.slice(2, 4)}` : shortDay(r.start);
+        ticks += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle">${esc(label)}</text>`;
+        lastTickX = x(i);
+      }
+    });
+    let marks = "";
+    if (isBar) {
+      const width = Math.min(28, Math.max(2, plotW / values.length * .62));
+      const r = Math.min(4, width / 2);
+      marks = values.map((v, i) => {
+        if (!v) return "";
+        const top = y(v), h = y(0) - top, left = x(i) - width / 2, rr = Math.min(r, h);
+        return `<path d="M${left},${y(0)}V${top + rr}Q${left},${top} ${left + rr},${top}H${left + width - rr}Q${left + width},${top} ${left + width},${top + rr}V${y(0)}Z" fill="var(--series)"/>`;
+      }).join("");
+    } else {
+      const line = values.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+      const area = `${line}L${x(values.length - 1)},${y(0)}L${x(0)},${y(0)}Z`;
+      marks = `${m.kind === "area" ? `<defs><linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--series)" stop-opacity=".22"/><stop offset="1" stop-color="var(--series)" stop-opacity="0"/></linearGradient></defs><path d="${area}" fill="url(#fade)"/>` : ""}<path d="${line}" fill="none" stroke="var(--series)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    }
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.setAttribute("aria-label", `${m.label}: ${unit} ${metric === "dau" ? "average" : "total"}. ${$("#metric-total").textContent}. Press Tab, then the left and right arrow keys to read each point.`);
+    svg.innerHTML = `<g class="axis">${grid}${ticks}</g>${marks}
+      <line id="cross" y1="${padT}" y2="${H - padB}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"/>
+      <circle id="hover-dot" r="4.5" fill="var(--series)" stroke="var(--card)" stroke-width="2" visibility="hidden"/>
+      <rect x="${padL}" y="0" width="${plotW}" height="${H}" fill="transparent" id="hit" tabindex="0" role="button" aria-label="Chart points. Use the left and right arrow keys."/>`;
+    const tip = $("#main-chart .tip");
+    const hit = $("#hit", svg), cross = $("#cross", svg), dot = $("#hover-dot", svg);
+    let selected = values.length - 1;
+    const show = (i) => {
+      selected = i;
+      const r = svg.getBoundingClientRect();
+      const position = (x(i) / W) * r.width;
+      const height = (y(values[i]) / H) * r.height;
+      cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
+      dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(values[i])); dot.setAttribute("visibility", isBar ? "hidden" : "visible");
+      tip.innerHTML = `${esc(rows[i].label)}<b>${esc(display(values[i]))}</b>${esc(m.label)}${metric === "dau" && granularity !== "day" ? " · daily average" : ""}`;
+      tip.style.display = "block";
+      tip.style.left = `${Math.max(60, Math.min(r.width - 60, position))}px`;
+      tip.style.top = `${height < 65 ? height + 8 : height - 8}px`;
+      tip.style.transform = height < 65 ? "translate(-50%, 0)" : "translate(-50%, -110%)";
+      hit.setAttribute("aria-label", `${rows[i].label}: ${display(values[i])}. Use the left and right arrow keys.`);
+    };
+    const hide = () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden"); };
+    hit.addEventListener("mousemove", (ev) => {
+      const r = svg.getBoundingClientRect();
+      const px = (ev.clientX - r.left) * (W / r.width);
+      const index = isBar ? Math.floor((px - padL) / plotW * values.length) : Math.round((px - padL) / plotW * (values.length - 1));
+      show(Math.max(0, Math.min(values.length - 1, index)));
+    });
+    hit.addEventListener("mouseleave", hide);
+    hit.addEventListener("focus", () => show(selected));
+    hit.addEventListener("blur", hide);
+    hit.addEventListener("keydown", (ev) => {
+      if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+      ev.preventDefault();
+      show(Math.max(0, Math.min(values.length - 1, selected + (ev.key === "ArrowRight" ? 1 : -1))));
+    });
+  }
+
+  function niceStep(v) {
+    if (v <= 1) return 1;
+    const p = Math.pow(10, Math.floor(Math.log10(v)));
+    const n = v / p;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p;
+  }
+
+  const FUNNEL = {
+    visitors: ["Website visitors", "sum of daily uniques"],
+    downloads: ["Downloaded the DMG", "download button"],
+    installs: ["Installed and opened", "new install ID"],
+    permissions: ["Granted permissions", "Accessibility + Input Monitoring"],
+    trial_started: ["Started the trial", "first successful action"],
+    trial_ended: ["Trial ended", "7 days passed"],
+    activated: ["Activated a license", "license key"],
+  };
+
+  function renderFunnel() {
+    const counts = Object.fromEntries(data.funnel.map((s) => [s.key, s.value]));
+    const old = Object.fromEntries(data.prev_funnel.map((s) => [s.key, s.value]));
+    const group = (title, keys, base) => {
+      const max = Math.max(1, counts[keys[0]] || 0);
+      return `<div class="funnel-group"><h4>${esc(title)}</h4>${keys.map((key, i) => {
+        const v = counts[key] || 0;
+        const from = i === 0 ? null : base === "first" ? counts[keys[0]] : counts[keys[i - 1]];
+        const conv = from === null ? "" : from ? pctText(pct(v, from)) : "—";
+        return `<div class="step"><div class="name">${esc(FUNNEL[key][0])}<small>${esc(FUNNEL[key][1])}</small></div>
+          <div class="bar" role="img" aria-label="${esc(FUNNEL[key][0])}: ${v}"><i style="width:${Math.min(100, pct(v, max)).toFixed(1)}%"></i></div>
+          <div class="count">${fmt(v)}</div>
+          <div class="conv">${conv ? `${conv}<small>${base === "first" ? "of installs" : "of visits"}</small>` : `<small>was ${fmt(old[key] || 0)}</small>`}</div></div>`;
+      }).join("")}</div>`;
+    };
+    $("#funnel-card").innerHTML = group("Website", ["visitors", "downloads"], "previous") +
+      group("App · Macs installed in this period", ["installs", "permissions", "trial_started", "trial_ended", "activated"], "first");
+  }
+
+  // ---------------------------------------------------------------- buyers
+
+  const SOURCE_NAMES = { unknown: "Unknown", direct: "Direct" };
+  const sourceName = (key) => SOURCE_NAMES[key] || (key.startsWith("utm:") ? `utm: ${key.slice(4)}` : key);
+  const sourceKey = (src) => !src ? "unknown" : src.utm_source ? `utm:${src.utm_source}` : src.referrer || "direct";
+  const dur = (ms) => {
+    if (ms === null || ms === undefined || !isFinite(ms)) return "—";
+    const m = Math.max(0, Math.round(ms / 60e3));
+    if (m < 60) return `${m} min`;
+    const h = Math.round(m / 6) / 10;
+    if (h < 24) return `${h % 1 ? h : Math.round(h)} h`;
+    const d = Math.floor(m / 1440), rest = Math.round((m - d * 1440) / 60);
+    return rest ? `${d} d ${rest} h` : `${d} d`;
+  };
+  const when = (ts) => new Date(ts).toLocaleString("en-US", { timeZone: "UTC", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  const ago = (ts) => {
+    const days = Math.floor((data.generated_at - ts) / 864e5);
+    return days <= 0 ? "today" : days === 1 ? "yesterday" : `${days} days ago`;
+  };
+  let openBuyer = null;
+
+  function renderBuyers() {
+    const j = data.journeys || { buyers: [], summary: {} };
+    const s = j.summary || {};
+    const n = s.buyers || 0;
+    const median = (v, unit) => v === null || v === undefined ? "—" : `${Math.round(v * 10) / 10}${unit}`;
+    $("#buyer-kpis").innerHTML = [
+      metricCell({ label: "Buyers", value: fmt(n), hint: n ? `${fmt(s.started_trial)} started a trial` : "none in this period" }),
+      metricCell({ label: "Install to purchase", value: median(s.median_days_to_purchase, " days"), hint: "median" }),
+      metricCell({ label: "Active days in trial", value: median(s.median_trial_active_days, " days"), hint: `median · ${fmt(s.median_trial_conversions || 0)} actions` }),
+      metricCell({ label: "Paywall to purchase", value: s.median_paywall_to_purchase_min === null || s.median_paywall_to_purchase_min === undefined ? "—" : dur(s.median_paywall_to_purchase_min * 60e3), hint: `median · ${fmt(s.saw_paywall || 0)} saw the paywall` }),
+      metricCell({ label: "Active after buying", value: n ? pctText(pct(s.still_active, n)) : "—", hint: `${fmt(s.still_active || 0)} Macs in the last 7 days` }),
+    ].join("");
+    bars("#buyer-sources", (s.sources || []).map((r) => ({ key: r.key, n: r.n })), { labels: Object.fromEntries((s.sources || []).map((r) => [r.key, sourceName(r.key)])), empty: "No buyers in this period" });
+    donut("#buyer-timing", n ? [{ key: "after_trial", n: s.after_trial }, { key: "during_trial", n: s.during_trial }] : [], { unit: "buyers", labels: { after_trial: "After the trial", during_trial: "During the trial" }, colors: { after_trial: "var(--warn)", during_trial: "var(--series)" } });
+
+    const buyers = j.buyers || [];
+    if (!buyers.length) { $("#buyers-table").innerHTML = `<tbody><tr><td class="muted">No licenses were activated in this period.</td></tr></tbody>`; return; }
+    const head = `<thead><tr><th>Bought</th><th>Country</th><th>Source</th><th>Trial</th><th class="num">Active days</th><th class="num">Actions</th><th class="num">To purchase</th><th>Now</th></tr></thead>`;
+    const rows = buyers.map((b, i) => {
+      const src = b.source;
+      const srcCell = src ? `<span class="src">${esc(sourceName(sourceKey(src)))}${src.match === "approx" ? ' <span class="tag" title="Matched by country and time only">approx.</span>' : ""}<small>${esc(src.landing || "—")}</small></span>` : '<span class="muted">Unknown</span>';
+      const trial = b.bought === "after_trial" ? '<span class="tag after">after</span>' : '<span class="tag during">during</span>';
+      const open = openBuyer === b.id;
+      return `<tr class="row" tabindex="0" role="button" aria-expanded="${open}" data-buyer="${esc(b.id)}">
+        <td><span class="when">${esc(when(b.activated_at))}</span></td>
+        <td>${b.country ? `<span class="country-cell" style="min-width:0">${flag(b.country)}${esc(countryName(b.country))}</span>` : '<span class="muted">—</span>'}</td>
+        <td>${srcCell}</td>
+        <td>${trial}${b.trial_days !== null ? ` <span class="muted">${Math.round(b.trial_days * 10) / 10} d</span>` : ""}</td>
+        <td class="num">${nf.format(b.trial.active_days)}</td>
+        <td class="num">${nf.format(b.trial.conversions)}</td>
+        <td class="num">${b.install_at ? esc(dur(b.activated_at - b.install_at)) : "—"}</td>
+        <td><span class="when">${esc(ago(b.after.last_seen_at))}<small>${b.after.active_days ? `${plural(b.after.active_days, "active day")} since` : "no activity since"}</small></span></td>
+      </tr>${open ? `<tr class="detail"><td colspan="8">${timeline(b)}</td></tr>` : ""}`;
+    }).join("");
+    $("#buyers-table").innerHTML = `${head}<tbody>${rows}</tbody>`;
+    const toggle = (tr) => { openBuyer = openBuyer === tr.dataset.buyer ? null : tr.dataset.buyer; renderBuyers(); $(`#buyers-table tr[data-buyer="${CSS.escape(tr.dataset.buyer)}"]`)?.focus(); };
+    $("#buyers-table").onclick = (e) => { const tr = e.target.closest("tr.row"); if (tr) toggle(tr); };
+    $("#buyers-table").onkeydown = (e) => { const tr = e.target.closest("tr.row"); if (tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggle(tr); } };
+  }
+
+  function timeline(b) {
+    const src = b.source;
+    const after = (ts, from) => ts && from ? `+${dur(ts - from)}` : "";
+    const steps = [];
+    const step = (cls, title, ts, text, rel) => steps.push(`<li class="${cls}"><b>${esc(title)}</b>${ts ? `<time>${esc(when(ts))}</time>` : ""}${rel ? `<span class="t">${esc(rel)}</span>` : ""}${text ? `<p>${text}</p>` : ""}</li>`);
+    if (src) {
+      const how = src.utm_source ? `utm_source: <b>${esc(src.utm_source)}</b>${src.utm_campaign ? ` · ${esc(src.utm_campaign)}` : ""}` : src.referrer ? `via <b>${esc(src.referrer)}</b>` : "Direct, or no referrer";
+      step("", "Visited the website", src.visit_at, `${how} → ${esc(src.landing || "—")} · ${plural(src.pages, "page")}${src.lang ? ` · ${esc(src.lang)}` : ""}${src.match === "approx" ? " · <i>approximate match</i>" : ""}`);
+      step("", "Downloaded the DMG", src.download_at, "", after(src.download_at, src.visit_at));
+    } else {
+      step("quiet", "Source unknown", null, "No website download matched this install.");
+    }
+    if (b.install_at) step("", b.upgrade ? "Installed before analytics existed" : "Installed the app", b.install_at, [b.os && `macOS ${esc(b.os)}`, b.version && `v${esc(b.version)}`].filter(Boolean).join(" · "), src ? after(b.install_at, src.download_at) : "");
+    if (b.permissions_at) step("", "Granted permissions", b.permissions_at, "Accessibility + Input Monitoring", after(b.permissions_at, b.install_at));
+    else step("quiet", "No permissions report", null, "");
+    if (b.trial_at) step("", "First action — trial started", b.trial_at, "", after(b.trial_at, b.install_at));
+    step("", "During the trial", null, `<b>${plural(b.trial.active_days, "active day")}</b> · <b>${plural(b.trial.conversions, "action")}</b>${b.trial_days !== null ? ` · over ${Math.round(b.trial_days * 10) / 10} days` : ""}`);
+    if (b.trial_ended_at) step("warn", "Trial ended", b.trial_ended_at, "", after(b.trial_ended_at, b.install_at));
+    if (b.paywall_at) step("warn", "Paywall shown", b.paywall_at, b.paywalls > 1 ? `shown ${nf.format(b.paywalls)} times` : "", b.trial_ended_at ? after(b.paywall_at, b.trial_ended_at) : "");
+    step("key", "License activated", b.activated_at, [b.install_at && `${dur(b.activated_at - b.install_at)} after installing`, src?.site_buy_click && "clicked “Buy” on the website"].filter(Boolean).map(esc).join(" · "), b.paywall_at ? after(b.activated_at, b.paywall_at) : "");
+    step(b.after.active_days ? "" : "quiet", "After buying", null, `${plural(b.after.active_days, "active day")} · ${plural(b.after.conversions, "action")} · last seen ${esc(ago(b.after.last_seen_at))}`);
+    return `<div class="tl"><div class="muted" style="font-size:12px">Mac #${esc(b.id)}</div><ol class="timeline">${steps.join("")}</ol></div>`;
+  }
+
+  function renderRetention() {
+    const rows = data.retention || [];
+    if (!rows.length) { $("#retention-table").innerHTML = `<div class="pad empty">No installs yet</div>`; return; }
+    const maxW = Math.max(0, ...rows.map((r) => r.weeks.length));
+    const shade = (v) => `var(--seq-${v <= 0 ? 0 : v < .1 ? 1 : v < .2 ? 2 : v < .35 ? 3 : v < .5 ? 4 : v < .7 ? 5 : 6})`;
+    const ink = (v) => v >= .5 ? "var(--heat-ink)" : v >= .35 ? "#0b0b0b" : "var(--ink)";
+    let head = `<tr><th>Week of</th><th class="num">Installs</th>`;
+    for (let k = 1; k <= maxW; k++) head += `<th class="num">Week ${k}</th>`;
+    head += "</tr>";
+    const body = rows.map((r) => `<tr><td>${esc(shortDay(r.start))}</td><td class="num">${nf.format(r.size)}</td>` +
+      Array.from({ length: maxW }, (_, k) => {
+        const v = r.weeks[k];
+        return v === undefined ? '<td class="cell muted" title="This week hasn’t happened yet">·</td>' : `<td class="cell" style="background:${shade(v)};color:${ink(v)}" title="Cohort ${esc(shortDay(r.start))}, week ${k + 1}: ${pctText(100 * v)}">${pctText(100 * v)}</td>`;
+      }).join("") + "</tr>").join("");
+    $("#retention-table").innerHTML = `<table class="heat"><thead>${head}</thead><tbody>${body}</tbody></table><div class="heat-legend"><b>Still active</b>${["0%", "<10%", "10–20%", "20–35%", "35–50%", "50–70%", "70%+"].map((label, i) => `<span><i class="heat-key" style="background:var(--seq-${i})"></i>${esc(label)}</span>`).join("")}${maxW === 0 ? "<span>Percentages appear here after the first week</span>" : ""}</div>`;
+  }
+
+  const EVENT_NAMES = {
+    pageview: "Page view", download: "DMG downloaded", buy_click: "Buy clicked",
+    install: "Installed", launch: "Launched", active: "Active day", updated: "Updated", permissions_granted: "Permissions granted",
+    first_conversion: "Trial started", trial_ended: "Trial ended", paywall_shown: "Paywall shown", license_activated: "License activated",
+    opt_out: "Turned statistics off",
+  };
+
+  function renderRecent() {
+    const rows = data.recent || [];
+    if (!rows.length) { $("#recent").innerHTML = `<div class="pad empty">No events yet</div>`; return; }
+    $("#recent").innerHTML = `<table><thead><tr><th>Time</th><th>Source</th><th>Event</th><th>Country</th><th>Details</th></tr></thead><tbody>` +
+      rows.map((r) => {
+        const detail = r.source === "web"
+          ? [r.path, r.referrer && `← ${r.referrer}`, r.os].filter(Boolean).join(" · ")
+          : [r.version && `v${r.version}`, r.os && `macOS ${r.os}`, r.props && Object.entries(r.props).map(([k, v]) => `${k}=${v}`).join(" ")].filter(Boolean).join(" · ");
+        return `<tr><td class="muted">${esc(new Date(r.ts).toLocaleString("en-US", { timeZone: "UTC", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }))}</td><td><span class="pill">${icon(r.source === "web" ? "globe" : "monitor")}${r.source === "web" ? "web" : "app"}</span></td>
+          <td>${esc(EVENT_NAMES[r.name] || r.name)}</td><td>${r.country ? `<span class="country-cell" style="min-width:0">${flag(r.country)}${esc(countryName(r.country))}</span>` : '<span class="muted">—</span>'}</td><td class="muted">${esc(detail)}</td></tr>`;
+      }).join("") + "</tbody></table>";
+  }
+
+  let resizeTimer;
+  window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => data && renderMain(), 150); });
+  // URL options for screenshots and docs: ?days=90&theme=dark&metric=revenue&only=funnel&open=1
+  const params = new URLSearchParams(location.search);
+  if ([7, 30, 90, 365].includes(Number(params.get("days")))) days = Number(params.get("days"));
+  if (themes.includes(params.get("theme"))) { theme = params.get("theme"); applyTheme(); }
+  if (METRICS.some((m) => m.key === params.get("metric"))) metric = params.get("metric");
+  if (params.get("only")) {
+    document.documentElement.classList.add("only");
+    sections.forEach((s) => { s.hidden = s.id !== params.get("only"); });
+  }
+  load();
+  if (params.get("open") && data?.journeys?.buyers?.[0]) { openBuyer = data.journeys.buyers[0].id; renderBuyers(); }
+})();
+</script>
+</body>
+</html>
